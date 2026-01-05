@@ -1,5 +1,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Zeyada&display=swap');
-
+.paper {
+  touch-action: none; /* Disables browser scrolling/zooming on this element */
+  /* ... your other styles ... */
+}
 body {
   height: 100vh;
   display: flex;
@@ -77,4 +80,5 @@ p {
   width: 100%; /* Make the video fill the container */
   height: auto; /* Maintain aspect ratio */
   border-radius: 10px; /* Optional: Add rounded corners */
+
 }
