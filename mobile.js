@@ -10,7 +10,9 @@ class Paper {
 
   prevTouchX = 0;
   prevTouchY = 0;
-  prevFingerAngle = 0; // Tracks angle between two fingers
+  prevFingerAngle = 0; 
+  
+  dragged = false; // ADDED: Track if this paper has been moved
 
   init(paper) {
     // --- TOUCH START ---
@@ -21,13 +23,11 @@ class Paper {
       paper.style.zIndex = highestZ;
       highestZ += 1;
 
-      // 1 Finger: Initialize Drag
       if (e.touches.length === 1) {
         this.prevTouchX = e.touches[0].clientX;
         this.prevTouchY = e.touches[0].clientY;
       }
       
-      // 2 Fingers: Initialize Rotation
       if (e.touches.length === 2) {
         this.rotating = true;
         this.prevFingerAngle = this.getFingerAngle(e);
@@ -37,7 +37,7 @@ class Paper {
 
     // --- TOUCH MOVE ---
     paper.addEventListener('touchmove', (e) => {
-      e.preventDefault(); // Stop Android scroll
+      e.preventDefault(); 
 
       // Case 1: Dragging (1 finger)
       if (!this.rotating && e.touches.length === 1) {
@@ -52,6 +52,12 @@ class Paper {
 
         this.prevTouchX = touchX;
         this.prevTouchY = touchY;
+
+        // ADDED: Mark as dragged and check if video should show
+        if (!this.dragged) {
+          this.dragged = true;
+          checkAllPapersDragged();
+        }
       }
 
       // Case 2: Rotating (2 fingers)
@@ -74,17 +80,14 @@ class Paper {
       this.holdingPaper = false;
       this.rotating = false;
 
-      // SMOOTH RESET: If we lifted one finger but 1 remains, 
-      // reset the 'prev' coordinates to avoid a "jump".
       if (e.touches.length === 1) {
-        this.holdingPaper = true; // We are still holding it with 1 finger
+        this.holdingPaper = true; 
         this.prevTouchX = e.touches[0].clientX;
         this.prevTouchY = e.touches[0].clientY;
       }
     });
   }
 
-  // Helper function to calculate angle between two fingers
   getFingerAngle(e) {
     const touch1 = e.touches[0];
     const touch2 = e.touches[1];
@@ -92,14 +95,25 @@ class Paper {
     const deltaY = touch2.clientY - touch1.clientY;
     const deltaX = touch2.clientX - touch1.clientX;
     
-    // atan2 gives angle in radians, convert to degrees
     return Math.atan2(deltaY, deltaX) * (180 / Math.PI);
   }
 }
 
-const papers = Array.from(document.querySelectorAll('.paper'));
+// ADDED: Logic to show the video
+function checkAllPapersDragged() {
+  const allPapersDragged = paperList.every((item) => item.instance.dragged);
+  if (allPapersDragged) {
+    const videoPaper = document.querySelector('.paper.video');
+    if (videoPaper) {
+      videoPaper.style.display = 'block';
+    }
+  }
+}
 
-papers.forEach(paper => {
+// MODIFIED: Store instances so we can check their 'dragged' status
+// Also using ':not(.video)' so the hidden video doesn't count as an undragged paper
+const paperList = Array.from(document.querySelectorAll('.paper:not(.video)')).map((paper) => {
   const p = new Paper();
   p.init(paper);
+  return { element: paper, instance: p };
 });
